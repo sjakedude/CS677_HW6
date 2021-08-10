@@ -90,6 +90,9 @@ print("Accuracy: " + str(accuracy))
 print("Confusion Matrix:")
 print(confusion_matrix(y_test, y_predict))
 
+# ======================
+# Question #2
+# ======================
 
 # KNN Classifier
 knn = make_pipeline(
@@ -152,3 +155,7 @@ table = pd.DataFrame(
 )
 print()
 print(table)
+
+# ======================
+# Question #3
+# ======================
