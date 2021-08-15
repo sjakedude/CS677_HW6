@@ -6,6 +6,7 @@ Homework #6
 Description: This program analyzes seed data.
 """
 
+import collections
 import pandas as pd
 import os
 import math
@@ -19,29 +20,32 @@ from sklearn.metrics import confusion_matrix
 from sklearn.pipeline import make_pipeline
 from sklearn.neighbors import KNeighborsClassifier
 from create_table import create_table
+from sklearn.cluster import KMeans
+import random
 
 
 # ======================
 # Main program execution
 # ======================
 
+cols = [
+    "area",
+    "perimeter",
+    "compactness",
+    "length_of_kernel",
+    "width_of_kernel",
+    "asymmetry_coefficient",
+    "lenth_of_kernel_groove",
+    "class",
+]
 # Reading csv into dataframe
-df = pd.read_csv(
+df_original = pd.read_csv(
     "data/seeds_dataset.txt",
     sep=r"\s+",
-    names=[
-        "area",
-        "perimeter",
-        "compactness",
-        "length_of_kernel",
-        "width_of_kernel",
-        "asymmetry_coefficient",
-        "lenth_of_kernel_groove",
-        "class",
-    ],
+    names=cols,
 )
 
-df = df[df["class"] > 1]
+df = df_original[df_original["class"] > 1]
 
 # ======================
 # Question #1
@@ -159,3 +163,46 @@ print(table)
 # ======================
 # Question #3
 # ======================
+
+# Clustering
+num_clusters = [1, 2, 3, 4, 5, 6, 7, 8]
+inertia_list = []
+for k in num_clusters:
+    kmeans_classifier = KMeans(n_clusters=k)
+    y_means = kmeans_classifier.fit_predict(df_original)
+    inertia = kmeans_classifier.inertia_
+    inertia_list.append(inertia)
+
+plt.plot(inertia_list, marker="o", color="green")
+# plt.show()
+
+# Pick 2 random features:
+cols.remove("class")
+random_cols = random.sample(set(cols), 2)
+df_random_cols = df_original[random_cols]
+
+# Run clustering for k=2
+kmeans_classifier = KMeans(n_clusters=3)
+y_means = kmeans_classifier.fit_predict(df_random_cols)
+centroids = kmeans_classifier.cluster_centers_
+
+plt.clf()
+
+for i in range(0, len(y_means)):
+    if y_means[i] == 0:
+        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="red")
+    elif y_means[i] == 1:
+        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="blue")
+    else:
+        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="green")
+
+plt.scatter(centroids[0][0], centroids[0][1],  c="black", label="Centroids")
+plt.scatter(centroids[1][0], centroids[1][1],  c="black")
+plt.scatter(centroids[2][0], centroids[2][1],  c="black")
+x_label = random_cols[0]
+y_label = random_cols[1]
+plt.legend()
+plt.xlabel(x_label)
+plt.ylabel(y_label)
+plt.tight_layout()
+plt.show()
