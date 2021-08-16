@@ -261,22 +261,22 @@ print()
 
 #### PART 4 ####
 
-
+df = df.reset_index(drop=True)
 
 y_predict_new_classifier = []
-for i in range(0, len(df_original.index)):
+for i in range(0, len(df.index)):
 
     distance_1 = math.sqrt(
-        (centroids[0][0] - df_original.loc[i][random_cols[0]]) ** 2
-        + (centroids[0][1] - df_original.loc[i][random_cols[1]]) ** 2
+        (centroids[0][0] - df.loc[i][random_cols[0]]) ** 2
+        + (centroids[0][1] - df.loc[i][random_cols[1]]) ** 2
     )
     distance_2 = math.sqrt(
-        (centroids[1][0] - df_original.loc[i][random_cols[0]]) ** 2
-        + (centroids[1][1] - df_original.loc[i][random_cols[1]]) ** 2
+        (centroids[1][0] - df.loc[i][random_cols[0]]) ** 2
+        + (centroids[1][1] - df_random_cols.loc[i][random_cols[1]]) ** 2
     )
     distance_3 = math.sqrt(
-        (centroids[2][0] - df_original.loc[i][random_cols[0]]) ** 2
-        + (centroids[2][1] - df_original.loc[i][random_cols[1]]) ** 2
+        (centroids[2][0] - df.loc[i][random_cols[0]]) ** 2
+        + (centroids[2][1] - df.loc[i][random_cols[1]]) ** 2
     )
 
     lowest_dist = distance_1
@@ -290,9 +290,9 @@ for i in range(0, len(df_original.index)):
         assigned_class = 3
     y_predict_new_classifier.append(assigned_class)
 
-accuracy = metrics.accuracy_score(y_predict_new_classifier, df_original["class"])
+accuracy = metrics.accuracy_score(y_predict_new_classifier, df["class"])
 print("===============")
 print("For my new classifier:")
 print("Accuracy: " + str(accuracy))
 print("Confusion Matrix:")
-print(confusion_matrix(df_original["class"], y_predict_new_classifier))
+print(confusion_matrix(df["class"], y_predict_new_classifier))
