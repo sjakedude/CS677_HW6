@@ -22,6 +22,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from create_table import create_table
 from sklearn.cluster import KMeans
 import random
+import sys
+import numpy as np
 
 
 # ======================
@@ -174,11 +176,13 @@ for k in num_clusters:
     inertia_list.append(inertia)
 
 plt.plot(inertia_list, marker="o", color="green")
-# plt.show()
+plt.show()
 
 # Pick 2 random features:
 cols.remove("class")
-random_cols = random.sample(set(cols), 2)
+random.seed(10)
+random.shuffle(cols)
+random_cols = [cols[0], cols[1]]
 df_random_cols = df_original[random_cols]
 
 # Run clustering for k=2
@@ -188,17 +192,53 @@ centroids = kmeans_classifier.cluster_centers_
 
 plt.clf()
 
+cluster_class = {
+    "cluster_1_red": {"class_1": 0, "class_2": 0, "class_3": 0},
+    "cluster_2_blue": {"class_1": 0, "class_2": 0, "class_3": 0},
+    "cluster_3_green": {"class_1": 0, "class_2": 0, "class_3": 0},
+}
+
 for i in range(0, len(y_means)):
     if y_means[i] == 0:
-        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="red")
+        if df_original.loc[i]["class"] == 1:
+            cluster_class["cluster_1_red"]["class_1"] += 1
+        elif df_original.loc[i]["class"] == 2:
+            cluster_class["cluster_1_red"]["class_2"] += 1
+        else:
+            cluster_class["cluster_1_red"]["class_3"] += 1
+        plt.scatter(
+            df_random_cols.loc[i][random_cols[0]],
+            df_random_cols.loc[i][random_cols[1]],
+            c="red",
+        )
     elif y_means[i] == 1:
-        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="blue")
+        if df_original.loc[i]["class"] == 1:
+            cluster_class["cluster_2_blue"]["class_1"] += 1
+        elif df_original.loc[i]["class"] == 2:
+            cluster_class["cluster_2_blue"]["class_2"] += 1
+        else:
+            cluster_class["cluster_2_blue"]["class_3"] += 1
+        plt.scatter(
+            df_random_cols.loc[i][random_cols[0]],
+            df_random_cols.loc[i][random_cols[1]],
+            c="blue",
+        )
     else:
-        plt.scatter(df_random_cols.loc[i][random_cols[0]], df_random_cols.loc[i][random_cols[1]], c="green")
+        if df_original.loc[i]["class"] == 1:
+            cluster_class["cluster_3_green"]["class_1"] += 1
+        elif df_original.loc[i]["class"] == 2:
+            cluster_class["cluster_3_green"]["class_2"] += 1
+        else:
+            cluster_class["cluster_3_green"]["class_3"] += 1
+        plt.scatter(
+            df_random_cols.loc[i][random_cols[0]],
+            df_random_cols.loc[i][random_cols[1]],
+            c="green",
+        )
 
-plt.scatter(centroids[0][0], centroids[0][1],  c="black", label="Centroids")
-plt.scatter(centroids[1][0], centroids[1][1],  c="black")
-plt.scatter(centroids[2][0], centroids[2][1],  c="black")
+plt.scatter(centroids[0][0], centroids[0][1], c="black", label="Centroids")
+plt.scatter(centroids[1][0], centroids[1][1], c="black")
+plt.scatter(centroids[2][0], centroids[2][1], c="black")
 x_label = random_cols[0]
 y_label = random_cols[1]
 plt.legend()
@@ -206,3 +246,53 @@ plt.xlabel(x_label)
 plt.ylabel(y_label)
 plt.tight_layout()
 plt.show()
+
+for cluster in cluster_class.keys():
+    highest_class = "class 1"
+    highest_class_value = cluster_class[cluster]["class_1"]
+    if cluster_class[cluster]["class_2"] > highest_class_value:
+        highest_class = "class 2"
+        highest_class_value = cluster_class[cluster]["class_2"]
+    if cluster_class[cluster]["class_3"] > highest_class_value:
+        highest_class = "class 3"
+        highest_class_value = cluster_class[cluster]["class_3"]
+    print("\nFor " + str(cluster) + " the most prominent class is " + highest_class)
+print()
+
+#### PART 4 ####
+
+
+
+y_predict_new_classifier = []
+for i in range(0, len(df_original.index)):
+
+    distance_1 = math.sqrt(
+        (centroids[0][0] - df_original.loc[i][random_cols[0]]) ** 2
+        + (centroids[0][1] - df_original.loc[i][random_cols[1]]) ** 2
+    )
+    distance_2 = math.sqrt(
+        (centroids[1][0] - df_original.loc[i][random_cols[0]]) ** 2
+        + (centroids[1][1] - df_original.loc[i][random_cols[1]]) ** 2
+    )
+    distance_3 = math.sqrt(
+        (centroids[2][0] - df_original.loc[i][random_cols[0]]) ** 2
+        + (centroids[2][1] - df_original.loc[i][random_cols[1]]) ** 2
+    )
+
+    lowest_dist = distance_1
+    assigned_class = 1
+
+    if distance_2 < lowest_dist:
+        lowest_dist = distance_2
+        assigned_class = 2
+    if distance_3 < lowest_dist:
+        lowest_dist = distance_3
+        assigned_class = 3
+    y_predict_new_classifier.append(assigned_class)
+
+accuracy = metrics.accuracy_score(y_predict_new_classifier, df_original["class"])
+print("===============")
+print("For my new classifier:")
+print("Accuracy: " + str(accuracy))
+print("Confusion Matrix:")
+print(confusion_matrix(df_original["class"], y_predict_new_classifier))
